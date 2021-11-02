@@ -45,13 +45,17 @@ Vagrant.configure("2") do |config|
     # end
   end
 
-  # config.vm.define "fsp" do |sccm|
-    # fsp.vm.hostname = "sccm"
-    # fsp.vm.network "private_network", ip: "192.168.33.30"
+  config.vm.define "fsp" do |fsp|
+    fsp.vm.hostname = "fsp"
+    fsp.vm.network "private_network", ip: "192.168.33.30"
+    fsp.vm.box = "peru/windows-server-2016-standard-x64-eval"
+    fsp.vm.provider :libvirt do |domain|
+      domain.memory = 2048
+    end
     # fsp.vm.provision "ansible" do |ansible|
       # ansible.playbook = "fsp-playbook.yml"
     # end
-  # end
+  end
 
 
 end
