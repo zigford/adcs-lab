@@ -1,0 +1,8 @@
+---
+
+- hosts: rootca
+  vars_files: vars.yml
+  roles:
+    - {role: upgrade_wmf51, when: ansible_powershell_version == 4}
+    - pwsh_gallery
+    - win_rootca

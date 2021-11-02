@@ -1,0 +1,62 @@
+---
+
+- name: Install Win CA roles and features.
+  win_feature:
+    name:
+      - AD-Certificate
+    include_management_tools: true
+
+- name: Install ADCSDsc module.
+  win_psmodule:
+    name: ActiveDirectoryCSDsc
+
+- name: Configure AD CA role.
+  win_dsc:
+    resource_name: AdcsCertificationAuthority
+    IsSingleInstance: "Yes"
+    CAType: StandaloneRootCA
+    HashAlgorithmName: SHA256
+    KeyLength: 4096
+    CACommonName: JPH-ROOTCA
+    ValidityPeriod: Years
+    ValidityPeriodUnits: 25
+    Credential_username: jph\vagrant
+    Credential_password: vagrant
+
+# TODO
+# I'm sure I saw a more ansible native way to do this.
+- name: run a bunch of certutil commands.
+  win_command: certutil -setreg CA\{{ item.setting }} {{ item.value }}
+  loop:
+    - setting: CRLOverlapPeriod
+      value: Months
+    - setting: CRLOverlapUnits
+      value: 0
+    - setting: CRLPeriod
+      value: Months
+    - setting: CRLPeriodUnits
+      value: 6
+    - setting: CRLDeltaPeriodUnits
+      value: 0
+    - setting: CRLDeltaOverlapUnits
+      value: 0
+    - setting: ValidityPeriodUnits
+      value: 10
+    - setting: DSConfigDN
+      value: CN=Configuration,DC=jph,DC=test
+    - setting: DSDomainDN
+      value: DC=jph,DC=test
+    - setting: CRLPeriod
+      value: Years
+    - setting: CRLPeriodUnits
+      value: 24
+
+- name: Configure AD CA Settings.
+  win_dsc:
+    resource_name: AdcsCertificationAuthoritySettings
+    IsSingleInstance: "Yes"
+    CRLPublicationURLs:
+      - 1:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl
+      - 6:http://pki.jph.test/crl/%3%8%9.crl
+    CACertPublicationURLs:
+      - 0:http://pki.jph.test/crl/%3%4.crt

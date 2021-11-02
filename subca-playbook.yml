@@ -1,0 +1,22 @@
+---
+
+# - hosts: dc
+  # gather_facts: false
+  # tasks:
+
+    # - name: Ensure vagrant user is added to groups
+      # win_user:
+        # name: vagrant
+        # groups:
+          # - Domain Admins
+          # - Enterprise Admins
+        # groups_action: add
+
+- hosts: subca
+  vars_files: vars.yml
+  roles:
+    # - dc_dns
+    # - join_domain
+    # - {role: upgrade_wmf51, when: ansible_powershell_version == 4}
+    # - pwsh_gallery
+    - win_subca

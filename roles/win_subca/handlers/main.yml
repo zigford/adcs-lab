@@ -1,0 +1,6 @@
+---
+
+- name: certsvc
+  win_service:
+    name: CertSvc
+    state: restarted

@@ -1,0 +1,24 @@
+[rootca]
+rootca ansible_host=192.168.33.2
+
+[subca]
+192.168.33.3
+
+[dc]
+192.168.33.10
+
+[sccm]
+192.168.33.20
+
+[multi:children]
+dc
+sccm
+rootca
+subca
+
+[multi:vars]
+ansible_user=vagrant
+ansible_password=vagrant
+ansible_port=5985
+ansible_connection=winrm
+ansible_become_method=runas

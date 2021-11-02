@@ -1,0 +1,27 @@
+---
+
+# - import_tasks: Install-SQL-Server.yml
+- name: Install PowerShell DSC module for SQLServer
+  win_psmodule:
+    name: SQLServerDsc
+
+- name: Install SQL Server
+  win_dsc:
+    resource_name: SQLSetup
+    Action: Install
+    UpdateEnabled: True
+    SourcePath: "{{ source }}"
+    InstanceName: "{{ mssql_instance_name | default(omit) }}"
+    InstallSharedDir: "{{ mssql_installshared_path | default(omit) }}"
+    InstallSharedwowDir: "{{ mssql_installsharedwow_path | default(omit) }}"
+    InstanceDir: "{{ mssql_instance_path | default(omit) }}"
+    InstallSQLDataDir: "{{ mssql_sqlinstalldata_path | default(omit) }}"
+    Features: "{{ mssql_features | default(omit) }}"
+    SQLCollation: "{{ mssql_collation | default(omit) }}"
+    BrowserSvcStartupType: "{{ mssql_browsersvc_mode | default(omit) }}"
+    SuppressReboot: false
+    SQLSvcAccount_username: jph\svc_sql
+    SQLSvcAccount_password: B0bP4ssw0rd
+    SQLSysAdminAccounts: jph\vagrant
+    PsDscRunAsCredential_username: "{{ ansible_user }}"
+    PsDscRunAsCredential_password: "{{ ansible_password }}"

@@ -1,0 +1,5 @@
+---
+# Playbook which builds the entire environment
+- import_playbook: dc-playbook.yml
+- import_playbook: cert-playbook.yml
+- import_playbook: sccm-playbook.yml
