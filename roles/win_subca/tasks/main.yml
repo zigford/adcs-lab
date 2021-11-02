@@ -1,157 +1,203 @@
 ---
 
-- name: Install Win CA roles and features.
-  win_feature:
-    name:
-      - AD-Certificate
-      - ADCS-Cert-Authority
-      - ADCS-Web-Enrollment
-    include_management_tools: true
-  become: true
-  become_method: runas
-  vars:
-    ansible_become_user: jph\vagrant
-    ansible_become_password: vagrant
+# - name: Install Win CA roles and features.
+  # win_feature:
+    # name:
+      # - AD-Certificate
+      # - ADCS-Cert-Authority
+      # - ADCS-Web-Enrollment
+    # include_management_tools: true
+  # become: true
+  # become_method: runas
+  # vars:
+    # ansible_become_user: jph\vagrant
+    # ansible_become_password: vagrant
 
-- name: Install ADCSDsc module.
-  win_psmodule:
-    name: ActiveDirectoryCSDsc
+# - name: Install ADCSDsc module.
+  # win_psmodule:
+    # name: ActiveDirectoryCSDsc
 
-- name: Configure AD CA role.
-  win_dsc:
-    resource_name: AdcsCertificationAuthority
-    IsSingleInstance: "Yes"
-    CAType: EnterpriseSubordinateCA
-    HashAlgorithmName: SHA256
-    KeyLength: 2048
-    CACommonName: JPH-SUBCA
-    CADistinguishedNameSuffix: DC=jph,DC=test
-    OverwriteExistingKey: True
-    Credential_username: jph\vagrant
-    Credential_password: vagrant
+# - name: Configure AD CA role.
+  # win_dsc:
+    # resource_name: AdcsCertificationAuthority
+    # IsSingleInstance: "Yes"
+    # CAType: EnterpriseSubordinateCA
+    # HashAlgorithmName: SHA256
+    # KeyLength: 2048
+    # CACommonName: JPH-SUBCA
+    # CADistinguishedNameSuffix: DC=jph,DC=test
+    # OverwriteExistingKey: True
+    # Credential_username: jph\vagrant
+    # Credential_password: vagrant
 
-- name: Copy cert request back to Ansible Controller.
-  fetch:
-    dest: files/
-    src: C:\subca.jph.test_JPH-SUBCA.req
-    flat: true
+# - name: Copy cert request back to Ansible Controller.
+  # fetch:
+    # dest: files/
+    # src: C:\subca.jph.test_JPH-SUBCA.req
+    # flat: true
 
-- name: Copy SubCA Request to Root CA for signing.
+# - name: Copy SubCA Request to Root CA for signing.
+  # copy:
+    # src: subca.jph.test_JPH-SUBCA.req
+    # dest: c:\
+  # delegate_to: rootca
+
+# - name: Get Signed CA status.
+  # win_command: >
+    # certutil.exe -view -out "Disposition,RequestID"
+    # -restrict "CommonName=JPH-SUBCA" -silent csv
+  # changed_when: false
+  # register: signed_ca_status
+  # delegate_to: rootca
+
+# - debug: var=signed_ca_status
+# - debug: msg="{{signed_ca_status.stdout | regex_search('(Issued|Pending)')}}"
+
+# - name: Submit request for signing
+  # win_command: >
+    # certreq.exe -submit -attrib "CertificateTemplate:SubCA"
+    # -q C:\subca.jph.test_JPH-SUBCA.req
+  # delegate_to: rootca
+  # register: subca_signing_req
+  # when: not signed_ca_status.stdout | regex_search('(Issued|Pending)')
+
+# - name: Get Pending request ID.
+  # win_command: >
+    # certutil.exe -view -out RequestID -restrict
+    # "CommonName=JPH-SUBCA,Disposition=9" -silent csv
+  # delegate_to: rootca
+  # changed_when: false
+  # when: >
+    # (subca_signing_req is defined and subca_signing_req.changed) or
+    # signed_ca_status.stdout.find("Pending") != -1
+  # register: pending_request_id
+        # 
+# - name: Issue SubCA Cert.
+  # win_command: >
+    # certutil.exe -resubmit
+    # "{{ pending_request_id.stdout_lines[1] }}"
+  # delegate_to: rootca
+  # when: signed_ca_status.stdout | regex_search('Pending')
+  # register: resubmit_out
+
+# - name: Write cert out to file.
+  # win_command: >
+    # certreq.exe -retrieve -f -q
+    # "{{ pending_request_id.stdout_lines[1] }}"
+    # c:\JPH-SUBCA.cer c:\JPH-SUBCA.p7b
+  # delegate_to: rootca
+  # failed_when:
+    # - subca_cert_out.rc != 0
+    # - subca_cert_out.rc != 2147942480
+  # changed_when: subca_cert_out.stdout.find("The file exists") == -1
+  # when: pending_request_id.stdout is defined
+  # register: subca_cert_out
+
+# - debug: var=subca_cert_out
+
+# - name: Copy cert back to Ansible controller.
+  # fetch:
+    # dest: files/
+    # src: C:\JPH-SUBCA.p7b
+    # flat: true
+  # delegate_to: rootca
+
+# - name: Copy Root CA Certs back to Ansible Controller.
+  # fetch:
+    # dest: files/
+    # src: C:\Windows\System32\CertSrv\CertEnroll\{{ item }}
+    # flat: true
+  # delegate_to: rootca
+  # loop:
+    # - JPH-ROOTCA.crl
+    # - rootca_JPH-ROOTCA.crt
+
+# - name: Copy rootCA to subca.
+  # copy:
+    # src: rootca_JPH-ROOTCA.crt
+    # dest: C:\
+
+# - name: Add RootCA to AD.
+  # win_command: >
+    # certutil.exe -dspublish -f c:\rootca_JPH-ROOTCA.crt RootCA
+  # register: add_to_ad
+  # changed_when: add_to_ad.stdout.find("Certificate already in DS store") == -1
+  # become: true
+  # become_method: runas
+  # vars:
+    # ansible_become_user: jph\vagrant
+    # ansible_become_password: vagrant
+
+# - debug: var=add_to_ad
+
+# - name: Copy signed CA to subca
+  # copy:
+    # src: JPH-SUBCA.p7b
+    # dest: C:\
+
+# - name: Disable checking of offline rootca
+  # win_command: >
+    # certutil.exe -setreg CA\CRLFlags +CRLF_REVCHECK_IGNORE_OFFLINE
+  # register: revcheck_ignore
+  # changed_when: revcheck_ignore.stdout_lines[5] != revcheck_ignore.stdout_lines[10]
+  # notify: certsvc
+
+# - name: Install signed CA file.
+  # win_command: >
+    # certutil.exe -installCert -f -silent C:\JPH-SUBCA.p7b
+  # register: install_subca
+  # failed_when:
+    # - install_subca.rc != 0
+    # - install_subca.rc != 2147947423
+  # become: true
+  # become_method: runas
+  # vars:
+    # ansible_become_user: jph\vagrant
+    # ansible_become_password: vagrant
+
+# - debug: var=install_subca
+
+- name: Create CA web location.
+  win_file:
+    path: C:\inetpub\wwwroot\crl
+    state: directory
+
+- name: Install ROOTCA files into web site.
   copy:
-    src: subca.jph.test_JPH-SUBCA.req
-    dest: c:\
-  delegate_to: rootca
-
-- name: Get Signed CA status.
-  win_command: >
-    certutil.exe -view -out "Disposition,RequestID"
-    -restrict "CommonName=JPH-SUBCA" -silent csv
-  changed_when: false
-  register: signed_ca_status
-  delegate_to: rootca
-
-- debug: var=signed_ca_status
-- debug: msg="{{signed_ca_status.stdout | regex_search('(Issued|Pending)')}}"
-
-- name: Submit request for signing
-  win_command: >
-    certreq.exe -submit -attrib "CertificateTemplate:SubCA"
-    -q C:\subca.jph.test_JPH-SUBCA.req
-  delegate_to: rootca
-  register: subca_signing_req
-  when: not signed_ca_status.stdout | regex_search('(Issued|Pending)')
-
-- name: Get Pending request ID.
-  win_command: >
-    certutil.exe -view -out RequestID -restrict
-    "CommonName=JPH-SUBCA,Disposition=9" -silent csv
-  delegate_to: rootca
-  changed_when: false
-  when: >
-    (subca_signing_req is defined and subca_signing_req.changed) or
-    signed_ca_status.stdout.find("Pending") != -1
-  register: pending_request_id
-        
-- name: Issue SubCA Cert.
-  win_command: >
-    certutil.exe -resubmit
-    "{{ pending_request_id.stdout_lines[1] }}"
-  delegate_to: rootca
-  when: signed_ca_status.stdout | regex_search('Pending')
-  register: resubmit_out
-
-- name: Write cert out to file.
-  win_command: >
-    certreq.exe -retrieve -f -q
-    "{{ pending_request_id.stdout_lines[1] }}"
-    c:\JPH-SUBCA.cer c:\JPH-SUBCA.p7b
-  delegate_to: rootca
-  failed_when:
-    - subca_cert_out.rc != 0
-    - subca_cert_out.rc != 2147942480
-  changed_when: subca_cert_out.stdout.find("The file exists") == -1
-  register: subca_cert_out
-
-- debug: var=subca_cert_out
-
-- name: Copy cert back to Ansible controller.
-  fetch:
-    dest: files/
-    src: C:\JPH-SUBCA.p7b
-    flat: true
-  delegate_to: rootca
-
-- name: Copy Root CA Certs back to Ansible Controller.
-  fetch:
-    dest: files/
-    src: C:\Windows\System32\CertSrv\CertEnroll\{{ item }}
-    flat: true
-  delegate_to: rootca
+    src: "{{ item }}"
+    dest: C:\inetpub\wwwroot\crl\
   loop:
     - JPH-ROOTCA.crl
     - rootca_JPH-ROOTCA.crt
 
-- name: Copy rootCA to subca.
+- name: Create dns alias for pki website.
+  win_dns_record:
+    name: pki
+    type: a
+    value: 192.168.33.3
+    zone: jph.test
+  delegate_to: dc
+
+- name: Configure SUBCA Settings.
+  win_dsc:
+    resource_name: AdcsCertificationAuthoritySettings
+    IsSingleInstance: "Yes"
+    CRLPublicationURLs:
+      - 65:C:\Windows\system32\CertSrv\CertEnroll\%3%8%9.crl
+      - 1:file://C:\inetpub\wwwroot\crl\%3%8%9.crl
+      - 2:http://pki.jph.test/crl/%3%8%9.crl
+    CACertPublicationURLs:
+      - 1:C:\Windows\system32\CertSrv\CertEnroll\%1_%3%4.crt
+      - 0:file://C:\inetpub\wwwroot\crl\%3%4.crt
+      - 2:http://pki.jph.test/crl/%3%4.crt
+
+- name: Ensure CA Certs are distributed to CDP.
   copy:
-    src: rootca_JPH-ROOTCA.crt
-    dest: C:\
-
-- name: Add RootCA to AD.
-  win_command: >
-    certutil.exe -dspublish -f c:\rootca_JPH-ROOTCA.crt RootCA
-  register: add_to_ad
-  changed_when: add_to_ad.stdout.find("Certificate already in DS store") == -1
-  become: true
-  become_method: runas
-  vars:
-    ansible_become_user: jph\vagrant
-    ansible_become_password: vagrant
-
-- debug: var=add_to_ad
-
-- name: Copy signed CA to subca
-  copy:
-    src: JPH-SUBCA.p7b
-    dest: C:\
-
-- name: Disable checking of offline rootca
-  win_command: >
-    certutil.exe -setreg CA\CRLFlags +CRLF_REVCHECK_IGNORE_OFFLINE
-  register: revcheck_ignore
-  changed_when: revcheck_ignore.stdout_lines[5] != revcheck_ignore.stdout_lines[10]
-  notify: certsvc
-
-- name: Install signed CA file.
-  win_command: >
-    certutil.exe -installCert -f -silent C:\JPH-SUBCA.p7b
-  register: install_subca
-  failed_when:
-    - install_subca.rc != 0
-    - install_subca.rc != 2147947423
-  become: true
-  become_method: runas
-  vars:
-    ansible_become_user: jph\vagrant
-    ansible_become_password: vagrant
-
-- debug: var=install_subca
+    src: C:\Windows\System32\certsrv\CertEnroll\{{ item.name }}
+    dest: C:\inetpub\wwwroot\crl\{{ item.newname }}
+    remote_src: true
+  loop:
+    - name: JPH-SUBCA.crl
+      newname: JPH-SUBCA.crl
+    - name: subca.jph.test_JPH-SUBCA.crt
+      newname: JPH-SUBCA.crt
