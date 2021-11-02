@@ -1,22 +1,10 @@
-[rootca]
+[vagrant]
 rootca ansible_host=192.168.33.2
+subca ansible_host=192.168.33.3
+dc ansible_host=192.168.33.10
+sccm ansible_host=192.168.33.20
 
-[subca]
-192.168.33.3
-
-[dc]
-192.168.33.10
-
-[sccm]
-192.168.33.20
-
-[multi:children]
-dc
-sccm
-rootca
-subca
-
-[multi:vars]
+[vagrant:vars]
 ansible_user=vagrant
 ansible_password=vagrant
 ansible_port=5985
