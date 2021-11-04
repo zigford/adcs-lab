@@ -47,3 +47,12 @@
         password_never_expires: true
         state: present
 
+    - name: Ensure vagrant user is added to enterprise admins.
+      win_domain_user:
+        name: vagrant
+        groups:
+         - "Domain Admins"
+         - "Enterprise Admins"
+         - "Schema Admins"
+        groups_action: add
+        state: present
