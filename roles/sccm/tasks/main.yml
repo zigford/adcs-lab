@@ -8,6 +8,8 @@
       - RDC
       - BITS
 
+- import_tasks: ad_permissions.yml
+
 - name: Ensure ADK and WinPE setup is downloaded.
   win_get_url:
     url: "{{ item.url }}"

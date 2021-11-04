@@ -1,0 +1,37 @@
+---
+
+- name: Create System Management container in AD.
+  win_shell: |
+    $root = (Get-ADRootDSE).defaultNamingContext
+    $ou = $null
+    try { $ou = Get-ADObject "CN=System Management,CN=System,$root" }
+    catch {
+      Write-Verbose "System Management container does not currently exist." }
+    if ($ou -eq $null) {
+      $ou = New-ADObject -Type Container -name "System Management" `
+      -Path "CN=System,$root" -Passthru
+      "changed"
+    }
+  register: create_sys_man_container
+  changed_when: create_sys_man_container.stdout.find("changed") != -1
+  delegate_to: dc
+
+- name: Give Primary Site server rights to System Management container.
+  win_shell: |
+    import-module activedirectory
+    $acl = get-acl "ad:CN=System Management,CN=System,DC=jph,DC=test"
+    If (-Not ($acl.access | ? IdentityReference -match SCCM)) {
+      $computer = get-adcomputer sccm
+      $sid = [System.Security.Principal.SecurityIdentifier]$computer.SID
+      $adRights=[DirectoryServices.ActiveDirectoryRights]::GenericAll
+      $accessType=[Security.AccessControl.AccessControlType]::Allow
+      $inheritance=[DirectoryServices.ActiveDirectorySecurityInheritance]::All
+      $ace = new-object System.DirectoryServices.ActiveDirectoryAccessRule $sid,
+      $adRights,$accessType,$inheritance
+      $acl.AddAccessRule($ace)
+      Set-acl -aclobject $acl "ad:CN=System Management,CN=System,DC=jph,DC=test"
+      "changed"
+    }
+  delegate_to: dc
+  register: perms_sys_man_container
+  changed_when: perms_sys_man_container.stdout.find("changed") != -1
