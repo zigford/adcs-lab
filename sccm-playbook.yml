@@ -8,10 +8,6 @@
     - role: sql_server
       vars:
         source: \\192.168.33.1\vagrant\LabSources\SQL
-        username: vagrant
-        password: vagrant
     - role: sccm
       vars:
         source: \\192.168.33.1\vagrant\LabSources\SCCM
-        username: vagrant
-        password: vagrant
