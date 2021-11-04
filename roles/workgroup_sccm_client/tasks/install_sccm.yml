@@ -1,0 +1,28 @@
+---
+
+- name: Install CCM client.
+  win_package:
+    creates_path: C:\Windows\CCM
+    path: \\sccm.jph.test\SMS_JPH\Client\ccmsetup.exe
+    product_id: '{3D2A7D9D-7E06-4613-BE2E-A5FEFF9463F9}'
+    arguments:
+      - /UsePKICert
+      - /NoCRLCheck
+      - /Retry:1
+      - /MP:https://sccm.jph.test
+      - SMSSITECODE=JPH
+      - SMSFSP=fsp.jph.test
+      - CCMCERTSEL="SubjectStr:ConfigMgrClient"
+      - CCMFIRSTCERT=1
+      - CCMALWAYSINF=0
+    state: present
+  become: true
+  become_method: runas
+  vars:
+    ansible_become_user: jph\vagrant
+    ansible_become_password: vagrant
+    ansible_become_flags: >
+      logon_type=new_credentials logon_flags=netcredentials_only
+  register: install_sccm_client
+
+- debug: var=install_sccm_client

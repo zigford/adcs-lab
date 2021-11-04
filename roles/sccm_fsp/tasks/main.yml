@@ -1,0 +1,6 @@
+---
+
+- name: Install Pre-req feautres.
+  win_feature:
+    name:
+      - Web-WebServer

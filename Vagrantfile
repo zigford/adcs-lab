@@ -57,5 +57,22 @@ Vagrant.configure("2") do |config|
     # end
   end
 
+  config.vm.define "workstation" do |workstation|
+    workstation.vm.box = "peru/windows-server-2012_r2-standard-x64-eval"
+    workstation.vm.provider :libvirt do |domain|
+      domain.memory = 1024
+    end
+    workstation.vm.hostname = "workstation"
+    workstation.vm.network "private_network", ip: "192.168.33.50"
+  end
+
+  config.vm.define "workgroup" do |workgroup|
+    workgroup.vm.box = "peru/windows-server-2012_r2-standard-x64-eval"
+    workgroup.vm.provider :libvirt do |domain|
+      domain.memory = 1024
+    end
+    workgroup.vm.hostname = "workgroup"
+    workgroup.vm.network "private_network", ip: "192.168.33.55"
+  end
 
 end

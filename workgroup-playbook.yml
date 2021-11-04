@@ -1,0 +1,7 @@
+---
+- hosts: workgroup
+  vars_files: vars.yml
+  roles:
+    - dc_dns
+    - {role: upgrade_wmf51, when: ansible_powershell_version == 4}
+    - workgroup_sccm_client

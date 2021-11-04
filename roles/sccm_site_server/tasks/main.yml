@@ -1,0 +1,14 @@
+---
+
+- name: Add Primary site system as a local admin.
+  ansible.windows.win_group_membership:
+    name: Administrators
+    members:
+      - JPH\SCCM$
+
+- name: Enable firewall rules for sccm site system.
+  community.windows.win_firewall_rule:
+    name: "{{ item }}"
+    enabled: yes
+  loop:
+    - File and Printer Sharing (SMB-In)

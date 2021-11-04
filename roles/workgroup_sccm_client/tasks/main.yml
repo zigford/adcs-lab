@@ -1,0 +1,5 @@
+---
+
+- import_tasks: get_workgroup_cert.yml
+- import_tasks: install_cacerts.yml
+- import_tasks: install_sccm.yml

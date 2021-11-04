@@ -1,0 +1,16 @@
+---
+
+- name: Provision root ca cert.
+  win_copy:
+    src: rootca_JPH-ROOTCA.crt
+    dest: C:\
+
+- name: Install Root CA.
+  ansible.windows.win_certificate_store:
+    path: C:\rootca_JPH-ROOTCA.crt
+    store_name: Root
+
+# - name: Install SubCA
+  # ansible.windows.win_certificate_store:
+    # path: C:\rootca_JPH-ROOTCA.crt
+    # store_name: CertificateAuthority

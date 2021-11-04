@@ -1,0 +1,7 @@
+---
+- hosts: workstation
+  vars_files: vars.yml
+  roles:
+    - dc_dns
+    - join_domain
+    - {role: upgrade_wmf51, when: ansible_powershell_version == 4}

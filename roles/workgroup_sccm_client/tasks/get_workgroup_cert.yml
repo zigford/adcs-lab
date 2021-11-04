@@ -1,0 +1,74 @@
+---
+
+- name: Generate workgroup client certificate.
+  win_shell: |
+    If (-NOT(
+      gci cert:\LocalMachine\My |
+      ? Subject -eq "CN=ConfigMgrClient-{{inventory_hostname}}, C=AU"
+    )) {
+      $TemplateName="ConfigMgrClientWorkgroupCertificate"
+      $Cert = Get-Certificate -Template $TemplateName `
+        -SubjectName "CN=ConfigMgrClient-{{inventory_hostname}},C=AU" `
+        -DnsName "configmgrclient-{{inventory_hostname}}.jph.test" `
+        -url ldap: `
+        -CertStoreLocation cert:\LocalMachine\My
+      "changed"
+    }
+  delegate_to: sccm
+  register: gen_cert
+  changed_when: gen_cert.stdout.find("changed") != -1
+  vars:
+    ansible_port: 5986
+    ansible_user: vagrant
+    ansible_connection: winrm
+    ansible_winrm_scheme: https
+    ansible_winrm_transport: credssp
+    ansible_winrm_server_cert_validation: ignore
+
+- name: Ensure certs dir is created on sccm.
+  win_file:
+    path: C:\Certs
+    state: directory
+  delegate_to: sccm
+
+- name: Export certificate to file.
+  win_shell: |
+    $PfxPwd= ConvertTo-SecureString -String "Password" -Force -AsPlainText
+    $thmprnt=gci cert:\LocalMachine\My |
+    ? Subject -eq "CN=ConfigMgrClient-{{inventory_hostname}}, C=AU" |
+    select-object -expand Thumbprint
+    Export-PfxCertificate -Cert cert:\localmachine\my\$thmprnt `
+      -FilePath "C:\Certs\ConfigMgrClient-{{inventory_hostname}}.pfx" `
+      -ChainOption EndEntityCertOnly `
+      -Password $PfxPwd
+  delegate_to: sccm
+  register: export_cert
+  args:
+    creates: C:\Certs\ConfigMgrClient-{{ inventory_hostname }}.pfx
+
+- name: Copy workstation cert to contoller.
+  fetch:
+    dest: files/
+    src: C:\Certs\ConfigMgrClient-{{ inventory_hostname }}.pfx
+    flat: true
+  delegate_to: sccm
+
+- name: Copy workstation cert to workstation.
+  win_copy:
+    src: ConfigMgrClient-{{ inventory_hostname }}.pfx
+    dest: C:\
+
+- name: Import cert.
+  win_shell: |
+    If (-NOT(
+      gci cert:\LocalMachine\My |
+      ? Subject -eq "CN=ConfigMgrClient-{{inventory_hostname}}, C=AU"
+    )) {
+      Import-PfxCertificate -FilePath `
+        C:\ConfigMgrClient-{{ inventory_hostname }}.pfx `
+        -CertStoreLocation Cert:\LocalMachine\My -Password `
+        (ConvertTo-SecureString -AsPlainText 'Password' -Force)
+      "changed"
+    }
+  register: import_pfx
+  changed_when: import_pfx.stdout.find("changed") != -1

@@ -3,6 +3,10 @@ rootca ansible_host=192.168.33.2
 subca ansible_host=192.168.33.3
 dc ansible_host=192.168.33.10
 sccm ansible_host=192.168.33.20
+fsp ansible_host=192.168.33.30
+workstation ansible_host=192.168.33.50
+workgroup ansible_host=192.168.33.55
+
 
 [vagrant:vars]
 ansible_user=vagrant
