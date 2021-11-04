@@ -35,3 +35,17 @@
   delegate_to: dc
   register: perms_sys_man_container
   changed_when: perms_sys_man_container.stdout.find("changed") != -1
+
+- name: Extend Schema.
+  win_command: "{{ source }}\\SMSSETUP\\BIN\\X64\\extadsch.exe"
+  args:
+    creates: C:\ExtADSch.log
+  register: extend_schema
+  delegate_to: dc
+  become: true
+  become_method: runas
+  become_user: vagrant
+  vars:
+    ansible_become_password: vagrant
+    ansible_become_flags: >
+      logon_type=new_credentials logon_flags=netcredentials_only
