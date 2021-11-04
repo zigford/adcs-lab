@@ -1,44 +1,8 @@
 ---
 
-- name: Install Pre-req feautres.
-  win_feature:
-    name:
-      - NET-Framework-Features
-      - Web-WebServer
-      - RDC
-      - BITS
-
+- import_tasks: prereqs.yml
 - import_tasks: ad_permissions.yml
 
-- name: Ensure ADK and WinPE setup is downloaded.
-  win_get_url:
-    url: "{{ item.url }}"
-    dest: C:\Users\vagrant\Downloads\{{ item.name }}
-  loop:
-    - url: https://go.microsoft.com/fwlink/?linkid=2165884
-      name: adksetup.exe
-    - url: https://go.microsoft.com/fwlink/?linkid=2166133
-      name: winpesetup.exe
-
-- name: Install ADK
-  win_command: >
-    C:\Users\vagrant\Downloads\adksetup.exe
-    /q /features
-    OptionId.DeploymentTools
-    OptionId.UserStateMigrationTool
-  args:
-    creates: >-
-      C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit
-
-- name: Install WinPE
-  win_command: >
-    C:\Users\vagrant\Downloads\winpesetup.exe
-    /features OptionId.WindowsPreinstallationEnvironment /q
-  args:
-    creates: >-
-      C:\Program Files (x86)\Windows Kits\10\Assessment
-      and Deployment Kit\Windows Preinstallation Environment
-    
 - name: Ensure the install script is present.
   win_copy:
     dest: C:\Users\vagrant\
