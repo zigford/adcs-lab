@@ -1,0 +1,11 @@
+---
+
+- name: Enable SCCM server for CredSSP
+  win_shell: |
+    $credssp = gci WSMan:\localhost\Service\Auth | ? Name -eq 'CredSSP'
+    if ($credssp.Value -eq "false") {
+      enable-wsmancredssp -role server -force
+      "changed"
+    }
+  register: enable_credssp_sccm
+  changed_when: enable_credssp_sccm.stdout.find("changed") != -1

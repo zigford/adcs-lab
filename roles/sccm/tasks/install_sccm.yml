@@ -1,0 +1,16 @@
+---
+
+- name: Ensure the install script is present.
+  win_copy:
+    dest: C:\Users\vagrant\
+    src: Answers.ini
+
+- name: Install SCCM
+  win_command: >
+    "{{ source }}\SMSSETUP\BIN\X64\setup.exe" /Script
+    C:\Users\vagrant\Answers.ini
+  args:
+    creates: C:\Program Files (x86)\Microsoft Configuration Manager
+  become: true
+  become_user: jph\vagrant
+  become_method: runas

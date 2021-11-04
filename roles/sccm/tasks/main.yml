@@ -2,16 +2,5 @@
 
 - import_tasks: prereqs.yml
 - import_tasks: ad_permissions.yml
-
-- name: Ensure the install script is present.
-  win_copy:
-    dest: C:\Users\vagrant\
-    src: Answers.ini
-
-- name: Install SCCM
-  win_command: >
-    "{{ source }}\SMSSETUP\BIN\X64\setup.exe" /Script
-    C:\Users\vagrant\Answers.ini
-  become: true
-  become_user: vagrant
-  become_method: runas
+- import_tasks: install_sccm.yml
+- import_tasks: postreqs.yml
