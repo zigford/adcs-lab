@@ -201,3 +201,10 @@
       newname: JPH-SUBCA.crl
     - name: subca.jph.test_JPH-SUBCA.crt
       newname: JPH-SUBCA.crt
+
+- name: Enable SubCA to be managed remotely
+  community.windows.win_firewall_rule:
+    name: "{{ item }}"
+    enabled: yes
+  loop:
+    - COM+ Remote Administration (DCOM-In)
