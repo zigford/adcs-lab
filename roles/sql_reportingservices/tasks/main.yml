@@ -1,0 +1,19 @@
+---
+
+- name: Install SQL Server reporting services.
+  win_package:
+    creates_path: C:\Program Files\Microsoft SQL Server Reporting Services
+    path: "{{ source }}"
+    product_id: '{BA5EF23D-A0EA-4549-8E47-75A44DFA6D31}'
+    arguments:
+      - /IAcceptLicenseTerms
+      - /Edition=Eval
+      - /quiet
+    state: present
+  become: true
+  become_user: jph\vagrant
+  become_method: runas
+  vars:
+    ansible_become_password: vagrant
+    ansible_become_flags: >
+      logon_type=new_credentials logon_flags=netcredentials_only

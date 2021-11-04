@@ -8,6 +8,9 @@
     - role: sql_server
       vars:
         source: \\192.168.33.1\vagrant\LabSources\SQL
+    - role: sql_reportingservices
+      vars:
+        source: \\192.168.33.1\vagrant\LabSources\SQLServerReportingServices.exe
     - role: sccm
       vars:
         source: \\192.168.33.1\vagrant\LabSources\SCCM
