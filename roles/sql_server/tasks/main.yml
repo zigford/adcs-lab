@@ -25,3 +25,16 @@
     SQLSysAdminAccounts: jph\vagrant
     PsDscRunAsCredential_username: "{{ ansible_user }}"
     PsDscRunAsCredential_password: "{{ ansible_password }}"
+
+- name: Enable firewall rules for sql.
+  community.windows.win_firewall_rule:
+    name: "{{ item.name }}"
+    localport: "{{ item.ports }}"
+    action: allow
+    protocol: tcp
+    profiles: domain
+    state: present
+    enabled: true
+  loop:
+    - name: SQL Portin 1434 and 4022
+      ports: 1434,4022
